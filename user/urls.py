@@ -4,5 +4,6 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-
+    # path('email/<str:link>',views.emailActive),
+    path('email/register',views.EmailRegister.as_view())
 ]

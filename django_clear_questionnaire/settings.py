@@ -15,7 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
@@ -26,7 +25,6 @@ SECRET_KEY = '3%5y3#($uruk$u3p7jl=pm$c)8v&jw_srrh5sr@a9=)ff&585)'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -70,7 +68,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django_clear_questionnaire.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
@@ -84,7 +81,6 @@ DATABASES = {
         'PORT': '3306',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -104,7 +100,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
@@ -118,11 +113,17 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+MY_SALT = 'shaobaitao'
+
+# Redis Configurations
+REDIS_HOST = '127.0.0.1'
+REDIS_PORT = '6379'
+REDIS_EXPIRE = 30
 
 # Email Configurations
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -132,7 +133,7 @@ EMAIL_HOST_USER = 'mail@shaobaitao.cn'
 EMAIL_HOST_PASSWORD = 'SBTsbt128431165'
 EMAIL_USE_TLS = False
 DEFAULT_FROM_EMAIL = '邵柏涛<mail@shaobaitao.cn>'
-
+EMAIL_DEPLOY = 'http://127.0.0.1:5000'
 # Caches Configurations
 # 用缓存的时候得手动新建一张缓存表
 # python manage.py createcachetable
@@ -149,4 +150,4 @@ CACHES = {
 }
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
