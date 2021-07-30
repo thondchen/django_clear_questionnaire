@@ -132,8 +132,9 @@ EMAIL_PORT = 25
 EMAIL_HOST_USER = 'mail@shaobaitao.cn'
 EMAIL_HOST_PASSWORD = 'SBTsbt128431165'
 EMAIL_USE_TLS = False
-DEFAULT_FROM_EMAIL = '邵柏涛<mail@shaobaitao.cn>'
+DEFAULT_FROM_EMAIL = '<mail@shaobaitao.cn>'
 EMAIL_DEPLOY = 'http://127.0.0.1:5000'
+
 # Caches Configurations
 # 用缓存的时候得手动新建一张缓存表
 # python manage.py createcachetable
