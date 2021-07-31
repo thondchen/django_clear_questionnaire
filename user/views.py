@@ -2,6 +2,7 @@ import hmac
 
 import redis
 from django.core import mail
+from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.views.generic import View
 
@@ -20,7 +21,11 @@ def emailActivate(request, link):
     if r.exists(link):
         email = r.get(link).decode()
         password = r.get(email).decode()
-        User.objects.create(username=email, email=email, password=password, active=True)
+
+        user = User.objects.create(email=email, password=password, active=True)
+        user.username = 'qw_' + str(user.id)
+        user.save()
+
         r.delete(link)
         r.delete(email)
         r.delete(email + '_COUNT')
@@ -72,7 +77,8 @@ class AccountLogin(View):
     def post(self, request):
         username = request.POST.get('username')
         password = request.POST.get('password')
-        if User.objects.filter(username=username, password=password).exists():
+        if User.objects.filter(Q(username=username) | Q(email=username) | Q(phone_number=username),
+                               password=password).exists():
             print('ok')
             token = generateToken(username)
 

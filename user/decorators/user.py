@@ -15,10 +15,7 @@ def emailCheck(f):
                 and re.match(r'^\w{64}$', password) is not None:
             return f(request, *args, **kwargs)
 
-        result = {
-            'code': 10001,
-            'msg': '邮箱和密码格式验证失败'
-        }
+        result = {'code': 10001,'msg': '邮箱和密码格式验证失败'}
         return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
 
     return wrap
