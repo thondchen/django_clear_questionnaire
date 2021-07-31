@@ -1,9 +1,12 @@
 from django.urls import path
-from django.views.decorators.cache import cache_page
+
 from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('email/active/<str:link>',views.emailActive),
-    path('email/register',views.EmailRegister.as_view())
+    path('email/activate/<str:link>', views.emailActivate),
+    path('email/register', views.EmailRegister.as_view()),
+    path('account/login', views.AccountLogin.as_view()),
+
+    path('tokenTest', views.tokenTest),
 ]

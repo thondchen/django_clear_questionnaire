@@ -1,17 +1,11 @@
 import hmac
-import json
+
 import redis
-
-
-from django.conf import settings
 from django.core import mail
-from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.generic import View
 
-from decorators.user import emailCheck
-
-
+from user.decorators.user import *
 # Create your views here.
 from user.models import User
 
@@ -20,40 +14,47 @@ def index(request):
     return HttpResponse("ok")
 
 
-def emailActive(request, link):
-    print(link)
+def emailActivate(request, link):
+    # print(link)
     r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
     if r.exists(link):
-        email = r.get(link)
-        password = r.get(email)
-        User.objects.create(email=email,password=password,active=True)
-        return HttpResponse('ok')
+        email = r.get(link).decode()
+        password = r.get(email).decode()
+        User.objects.create(username=email, email=email, password=password, active=True)
+        r.delete(link)
+        r.delete(email)
+        r.delete(email + '_COUNT')
+        result = {'code': 10003, 'msg': '邮件激活成功'}
+        return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
     else:
-        return HttpResponse(link)
+        result = {'code': 10004, 'msg': '激活地址不存在'}
+        return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
 
 
 class EmailRegister(View):
     @method_decorator(emailCheck)
     def post(self, request):
         email = request.POST.get('email')
+
+        if User.objects.filter(email=email).exists():
+            result = {'code': 10003, 'msg': '此邮箱已注册'}
+            return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
+
         password = request.POST.get('password')
         r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
 
         if r.exists(email):
             r.incr(email + '_COUNT', 1)
             if int(r.get(email + '_COUNT')) > 10:
-                result = {
-                    'code': 10002,
-                    'msg': '一小时内同一个邮箱只能发10次'
-                }
+                result = {'code': 10002, 'msg': '一小时内同一个邮箱只能发10次'}
                 return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
         else:
             r.set(email, password, ex=settings.REDIS_EXPIRE)
             r.set(email + '_COUNT', 1, ex=settings.REDIS_EXPIRE)
 
-        path = hmac.new(settings.MY_SALT.encode(), email.encode(), digestmod='SHA256').hexdigest()
+        path = hmac.new(settings.TOKEN_SALT.encode(), email.encode(), digestmod='SHA256').hexdigest()
         r.set(path, email, ex=settings.REDIS_EXPIRE)
-        activeUrl = settings.EMAIL_DEPLOY + "/user/email/active/" + path
+        activeUrl = settings.FRONT_DEPLOY + "/user/email/activate/" + path
         mail.send_mail(
             subject='清问问卷账号激活',
             message='我是根本就不重要',
@@ -62,8 +63,34 @@ class EmailRegister(View):
             recipient_list=[email]
         )
 
-        result = {
-            'code': 10200,
-            'msg': '邮件发送成功'
-        }
+        result = {'code': 10200, 'msg': '邮件发送成功'}
         return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
+
+
+class AccountLogin(View):
+    @method_decorator(accountCheck)
+    def post(self, request):
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        if User.objects.filter(username=username, password=password).exists():
+            print('ok')
+            token = generateToken(username)
+
+            result = {
+                'code': 11200,
+                'data': {
+                    'token': token
+                },
+                'msg': '登录成功'
+            }
+            return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
+
+        else:
+            result = {'code': 11400, 'msg': '用户名或密码不正确'}
+            return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
+
+
+@checkToken
+def tokenTest(request):
+    print(type(request.payload))
+    return HttpResponse(request.payload)

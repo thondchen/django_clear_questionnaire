@@ -118,7 +118,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-MY_SALT = 'shaobaitao'
+# Token Configurations
+TOKEN_SALT = 'shaobaitao'
+TOKEN_EXPIRE = 24*60*60
 
 # Redis Configurations
 REDIS_HOST = '127.0.0.1'
@@ -133,7 +135,7 @@ EMAIL_HOST_USER = 'mail@shaobaitao.cn'
 EMAIL_HOST_PASSWORD = 'SBTsbt128431165'
 EMAIL_USE_TLS = False
 DEFAULT_FROM_EMAIL = '<mail@shaobaitao.cn>'
-EMAIL_DEPLOY = 'http://127.0.0.1:5000'
+FRONT_DEPLOY = ' http://localhost:8080/#'
 
 # Caches Configurations
 # 用缓存的时候得手动新建一张缓存表
