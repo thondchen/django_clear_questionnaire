@@ -4,7 +4,7 @@ import jwt
 
 from django.conf import settings
 
-from tools.index import returnCodeMsg
+from tools.index import codeMsg
 
 
 def emailCheck(f):
@@ -16,7 +16,7 @@ def emailCheck(f):
         email = request.POST.get('email')
         if re.match(r'^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$', email) is not None:
             return f(request, *args, **kwargs)
-        returnCodeMsg(10001, '邮箱格式验证失败')
+        return codeMsg(10001, '邮箱格式验证失败')
 
     return wrap
 
@@ -30,7 +30,7 @@ def passwordCheck(f):
         password = request.POST.get('password')
         if re.match(r'^\w{64}$', password) is not None:
             return f(request, *args, **kwargs)
-        returnCodeMsg(10006, '密码格式验证失败')
+        return codeMsg(10006, '密码格式验证失败')
 
     return wrap
 
@@ -45,7 +45,7 @@ def accountCheck(f):
         # 账号任意字符1~20位即可
         if re.match(r'^[\s\S]{1,20}$', username):
             return f(request, *args, **kwargs)
-        returnCodeMsg(10005, '账号或密码格式错误')
+        return codeMsg(10005, '账号或密码格式错误')
 
     return wrap
 
@@ -70,13 +70,13 @@ def checkToken(f):
     def wrap(request, *args, **kwargs):
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
-            returnCodeMsg(10401, '未携带Token')
+            return codeMsg(10401, '未携带Token')
         # noinspection PyBroadException
         try:
             request.payload = jwt.decode(token, settings.TOKEN_SALT, 'HS256')
         except Exception as e:
             print(e)
-            returnCodeMsg(10402, 'Token解析失败')
+            return codeMsg(10402, 'Token解析失败')
         return f(request, *args, **kwargs)
 
     return wrap

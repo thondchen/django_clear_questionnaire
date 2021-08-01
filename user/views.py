@@ -36,9 +36,9 @@ def emailActivate(request):
 
         r.delete(email)
         r.delete(email + '_COUNT')
-        returnCodeMsg(10003, '账号注册成功')
+        return codeMsg(10003, '账号注册成功')
     else:
-        returnCodeMsg(10004, '激活邮箱不存在')
+        return codeMsg(10004, '激活邮箱不存在')
 
 
 # 邮箱注册视图类
@@ -47,7 +47,7 @@ class EmailRegister(View):
     def post(self, request):
         email = request.POST.get('email')
         if User.objects.filter(email=email).exists():
-            returnCodeMsg(10003, '此邮箱已注册')
+            return codeMsg(10003, '此邮箱已注册')
         r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
         # Redis 键值
         # email_count:count    email:VCode
@@ -56,7 +56,7 @@ class EmailRegister(View):
         if r.exists(email):
             r.incr(email + '_COUNT', 1)
             if int(r.get(email + '_COUNT')) > 10:
-                returnCodeMsg(10002, '一小时内同一个邮箱只能发10次')
+                return codeMsg(10002, '一小时内同一个邮箱只能发10次')
         r.set(email, VCode, ex=settings.REDIS_EXPIRE)
         r.set(email + '_COUNT', 1, ex=settings.REDIS_EXPIRE)
         # 发验证码邮件
@@ -67,7 +67,7 @@ class EmailRegister(View):
             from_email='mail@shaobaitao.cn',
             recipient_list=[email]
         )
-        returnCodeMsg(10200, '邮件发送成功')
+        return codeMsg(10200, '邮件发送成功')
 
 
 class AccountLogin(View):
@@ -88,7 +88,7 @@ class AccountLogin(View):
             }
             return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
         else:
-            returnCodeMsg(11400, '用户名或密码不正确')
+            return codeMsg(11400, '用户名或密码不正确')
 
 
 class EmailForgot(View):
@@ -97,12 +97,12 @@ class EmailForgot(View):
         email = request.POST.get('email')
 
         if User.objects.filter(email=email).exists() is not True:
-            returnCodeMsg(10007, '此邮箱未注册')
+            return codeMsg(10007, '此邮箱未注册')
         r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=1)
         if r.exists(email):
             r.incr(email + '_COUNT', 1)
             if int(r.get(email + '_COUNT')) > 10:
-                returnCodeMsg(10002, '一小时内同一个邮箱只能发10次')
+                return codeMsg(10002, '一小时内同一个邮箱只能发10次')
         else:
             r.set(email + '_COUNT', 1, ex=settings.REDIS_EXPIRE)
 
@@ -116,4 +116,4 @@ class EmailForgot(View):
             from_email='mail@shaobaitao.cn',
             recipient_list=[email]
         )
-        returnCodeMsg(10200, '邮件发送成功')
+        return codeMsg(10200, '邮件发送成功')

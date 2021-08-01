@@ -15,7 +15,7 @@ def getRandomNumberStr(bit):
     return str
 
 
-def returnCodeMsg(code: int, msg: str):
+def codeMsg(code: int, msg: str):
     """
     返回携带状态码和信息的HttpResponse
     HttpResponse code and message
