@@ -9,5 +9,4 @@ urlpatterns = [
     path('email/forgot', views.EmailForgot.as_view()),
     path('account/login', views.AccountLogin.as_view()),
 
-    path('tokenTest', views.tokenTest),
 ]

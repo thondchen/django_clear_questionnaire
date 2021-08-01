@@ -1,53 +1,59 @@
-import json
 import re
 import time
-
 import jwt
-from django.http import HttpResponse
+
 from django.conf import settings
+
+from tools.index import returnCodeMsg
 
 
 def emailCheck(f):
+    """
+    检查邮箱格式
+    """
+
     def wrap(request, *args, **kwargs):
         email = request.POST.get('email')
         if re.match(r'^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$', email) is not None:
             return f(request, *args, **kwargs)
-        result = {'code': 10001, 'msg': '邮箱格式验证失败'}
-        return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
+        returnCodeMsg(10001, '邮箱格式验证失败')
 
     return wrap
 
 
 def passwordCheck(f):
+    """
+    检查密码格式 必须64位16进制串
+    """
+
     def wrap(request, *args, **kwargs):
         password = request.POST.get('password')
         if re.match(r'^\w{64}$', password) is not None:
             return f(request, *args, **kwargs)
-        result = {'code': 10006, 'msg': '密码格式验证失败'}
-        return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
+        returnCodeMsg(10006, '密码格式验证失败')
 
     return wrap
 
 
 def accountCheck(f):
+    """
+    检查账号格式 账号可能是用户名、邮箱、手机号其中之一
+    """
+
     def wrap(request, *args, **kwargs):
-        print(1)
         username = request.POST.get('username')
-        password = request.POST.get('password')
-        print(password)
-        if re.match(r'^\w{64}$', password):
-            if re.match(r'^[\s\S]{1,20}$', username):
-                return f(request, *args, **kwargs)
-        result = {
-            'code': 10005,
-            'msg': '密码格式错误'
-        }
-        return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
+        # 账号任意字符1~20位即可
+        if re.match(r'^[\s\S]{1,20}$', username):
+            return f(request, *args, **kwargs)
+        returnCodeMsg(10005, '账号或密码格式错误')
 
     return wrap
 
 
 def generateToken(username):
+    """
+    生成Token
+    """
     dic = {
         'username': username,
         'exp': time.time() + settings.TOKEN_EXPIRE
@@ -57,21 +63,20 @@ def generateToken(username):
 
 
 def checkToken(f):
+    """
+    解析Token的装饰器
+    """
+
     def wrap(request, *args, **kwargs):
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
-            result = {'code': 10401, 'msg': '未携带Token'}
-            return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
-
+            returnCodeMsg(10401, '未携带Token')
         # noinspection PyBroadException
         try:
-            payload = jwt.decode(token, settings.TOKEN_SALT, 'HS256')
+            request.payload = jwt.decode(token, settings.TOKEN_SALT, 'HS256')
         except Exception as e:
             print(e)
-            result = {'code': 10402, 'msg': 'Token解析失败'}
-            return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
-
-        request.payload = payload
+            returnCodeMsg(10402, 'Token解析失败')
         return f(request, *args, **kwargs)
 
     return wrap
