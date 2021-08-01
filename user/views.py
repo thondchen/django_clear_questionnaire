@@ -16,14 +16,15 @@ def index(request):
     return HttpResponse("ok")
 
 
+# 邮箱验证码激活注册账号 过两个检查装饰器
 @emailCheck
 @passwordCheck
 def emailActivate(request):
-    # email_count:count    email:VCode
     email = request.POST.get('email')
     VCode = request.POST.get('emailVCode')
     password = request.POST.get('password')
 
+    # email_count:count    email:VCode
     r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
     if r.exists(email):
         if VCode == r.get(email).decode():
@@ -41,6 +42,7 @@ def emailActivate(request):
         return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
 
 
+# 邮箱注册视图类
 class EmailRegister(View):
     @method_decorator(emailCheck)
     def post(self, request):
@@ -51,7 +53,7 @@ class EmailRegister(View):
             return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
 
         r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
-        # email:password email+count:int path:email
+        # Redis 键值
         # email_count:count    email:VCode
         VCode = getRandomNumberStr(6)
 
@@ -64,6 +66,7 @@ class EmailRegister(View):
         r.set(email, VCode, ex=settings.REDIS_EXPIRE)
         r.set(email + '_COUNT', 1, ex=settings.REDIS_EXPIRE)
 
+        # 发验证码邮件
         mail.send_mail(
             subject='清问问卷账号验证码',
             message='我是根本就不重要',

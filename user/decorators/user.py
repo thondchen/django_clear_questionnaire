@@ -31,11 +31,13 @@ def passwordCheck(f):
 
 def accountCheck(f):
     def wrap(request, *args, **kwargs):
+        print(1)
         username = request.POST.get('username')
         password = request.POST.get('password')
-        if re.match(r'^\w{64}$', password) is not None and re.match(r'^{1,20}$', username) is not None:
-            return f(request, *args, **kwargs)
-
+        print(password)
+        if re.match(r'^\w{64}$', password):
+            if re.match(r'^[\s\S]{1,20}$', username):
+                return f(request, *args, **kwargs)
         result = {
             'code': 10005,
             'msg': '密码格式错误'
