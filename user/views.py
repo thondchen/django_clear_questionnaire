@@ -1,7 +1,6 @@
-import hmac
 import json
-
 import redis
+
 from django.core import mail
 from django.db.models import Q
 from django.http import HttpResponse
@@ -36,9 +35,9 @@ def emailActivate(request):
 
         r.delete(email)
         r.delete(email + '_COUNT')
-        return codeMsg(10003, '账号注册成功')
+        return codeMsg(10200, '账号注册成功')
     else:
-        return codeMsg(10004, '激活邮箱不存在')
+        return codeMsg(10406, '激活邮箱不存在')
 
 
 # 邮箱注册视图类
@@ -47,7 +46,7 @@ class EmailRegister(View):
     def post(self, request):
         email = request.POST.get('email')
         if User.objects.filter(email=email).exists():
-            return codeMsg(10003, '此邮箱已注册')
+            return codeMsg(10407, '此邮箱已注册')
         r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
         # Redis 键值
         # email_count:count    email:VCode
@@ -56,18 +55,18 @@ class EmailRegister(View):
         if r.exists(email):
             r.incr(email + '_COUNT', 1)
             if int(r.get(email + '_COUNT')) > 10:
-                return codeMsg(10002, '一小时内同一个邮箱只能发10次')
+                return codeMsg(10408, '一小时内同一个邮箱只能发10次')
         r.set(email, VCode, ex=settings.REDIS_EXPIRE)
         r.set(email + '_COUNT', 1, ex=settings.REDIS_EXPIRE)
         # 发验证码邮件
         mail.send_mail(
-            subject='清问问卷账号验证码',
+            subject='清问问卷账号注册验证码',
             message='我是根本就不重要',
             html_message="<h4>您的账号验证码为<h1>" + VCode + "</h1></h4>",
             from_email='mail@shaobaitao.cn',
             recipient_list=[email]
         )
-        return codeMsg(10200, '邮件发送成功')
+        return codeMsg(10201, '邮件发送成功')
 
 
 class AccountLogin(View):
@@ -80,7 +79,7 @@ class AccountLogin(View):
                                password=password).exists():
             token = generateToken(username)
             result = {
-                'code': 11200,
+                'code': 10202,
                 'data': {
                     'token': token
                 },
@@ -88,7 +87,7 @@ class AccountLogin(View):
             }
             return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
         else:
-            return codeMsg(11400, '用户名或密码不正确')
+            return codeMsg(10409, '用户名或密码不正确')
 
 
 class EmailForgot(View):
@@ -96,24 +95,55 @@ class EmailForgot(View):
     def post(self, request):
         email = request.POST.get('email')
 
-        if User.objects.filter(email=email).exists() is not True:
-            return codeMsg(10007, '此邮箱未注册')
+        if not User.objects.filter(email=email).exists():
+            return codeMsg(10410, '此邮箱未注册')
+
+        # 注册db用的0  忘记密码db用的1
         r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=1)
+        VCode = getRandomNumberStr(6)
         if r.exists(email):
             r.incr(email + '_COUNT', 1)
             if int(r.get(email + '_COUNT')) > 10:
-                return codeMsg(10002, '一小时内同一个邮箱只能发10次')
-        else:
-            r.set(email + '_COUNT', 1, ex=settings.REDIS_EXPIRE)
-
-        path = hmac.new(settings.TOKEN_SALT.encode(), str(email + '1').encode(), digestmod='SHA256').hexdigest()
-        r.set(path, email, ex=settings.REDIS_EXPIRE)
-        activeUrl = settings.FRONT_DEPLOY + "/user/email/change/" + path
+                return codeMsg(10408, '一小时内同一个邮箱只能发10次')
+        r.set(email, VCode, ex=settings.REDIS_EXPIRE)
+        r.set(email + '_COUNT', 1, ex=settings.REDIS_EXPIRE)
+        # 发验证码邮件
         mail.send_mail(
-            subject='清问问卷账号密码找回',
+            subject='清问问卷账号找回验证码',
             message='我是根本就不重要',
-            html_message="<h4>请点击链接进行密码找回<a href='" + activeUrl + "'>" + activeUrl + "</a></h4>",
+            html_message="<h4>您的账号找回验证码为<h1>" + VCode + "</h1></h4>",
             from_email='mail@shaobaitao.cn',
             recipient_list=[email]
         )
-        return codeMsg(10200, '邮件发送成功')
+        return codeMsg(10201, '邮件发送成功')
+
+
+@emailCheck
+@passwordCheck
+def emailChange(request):
+    email = request.POST.get('email')
+    VCode = request.POST.get('emailVCode')
+    password = request.POST.get('password')
+
+    # 密码找回db为1  email_count:count    email:VCode
+    r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=1)
+    if r.exists(email):
+        if VCode == r.get(email).decode():
+            # 这里email必找到
+            user = User.objects.get(email=email)
+            user.password = password
+            user.save()
+        r.delete(email)
+        r.delete(email + '_COUNT')
+        return codeMsg(10203, '账号密码修改成功')
+    else:
+        return codeMsg(10406, '激活邮箱不存在')
+
+
+@tokenCheck
+def getInfo(request):
+    print(request.payload)
+    account = request.payload['username']
+    user = User.objects.get(Q(username=account) | Q(email=account) | Q(phone_number=account))
+    print(user.id)
+    return HttpResponse(request.payload)
