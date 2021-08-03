@@ -2,7 +2,6 @@ import json
 import redis
 
 from django.core import mail
-from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.generic import View
@@ -81,30 +80,23 @@ class AccountLogin(View):
         account = request.POST.get('username')
         password = request.POST.get('password')
 
+        # 登录需要对两张表进行操作 UserInfo UserLogin
+        # 主要更新UserInfo中last_login和增加UserLogin中用户登录记录
         userLogin = UserLogin()
-
         if User.objects.filter(username=account, password=password).exists():
-            userLogin.login_mode = 'username'
             user = User.objects.get(username=account, password=password)
-            username = user.username
-            userLogin.user = user
-
+            userLogin.login_mode = 'username'
         elif User.objects.filter(email=account, password=password).exists():
-            userLogin.login_mode = 'email'
             user = User.objects.get(email=account, password=password)
-            username = user.username
-            userLogin.user = user
+            userLogin.login_mode = 'email'
         elif User.objects.filter(phone_number=account, password=password).exists():
-            userLogin.login_mode = 'phone_number'
             user = User.objects.get(phone_number=account, password=password)
-            username = user.username
-            userLogin.user = user
+            userLogin.login_mode = 'phone_number'
         else:
             return codeMsg(10409, '用户名或密码不正确')
-        # if User.objects.filter(Q(username=username) | Q(email=username) | Q(phone_number=username),
-        #                        password=password).exists():
-        # 登录操作
-        userLogin.username = username
+
+        userLogin.user = user
+        userLogin.username = user.username
         userLogin.ip = request.META["HTTP_X_FORWARDED_FOR"]
         userLogin.os = request.META['HTTP_USER_AGENT']
         userLogin.save()
@@ -112,7 +104,7 @@ class AccountLogin(View):
         userInfo = UserInfo.objects.get(user_id=user.id)
         userInfo.save()
 
-        token = generateToken(username)
+        token = generateToken(user.username)
         result = {
             'code': 10202,
             'data': {
@@ -121,11 +113,13 @@ class AccountLogin(View):
             'msg': '登录成功'
         }
         return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
-        # else:
-        #     return codeMsg(10409, '用户名或密码不正确')
 
 
 class EmailForgot(View):
+    """
+    邮箱找回密码
+    """
+
     @method_decorator(emailCheck)
     def post(self, request):
         email = request.POST.get('email')
@@ -156,6 +150,9 @@ class EmailForgot(View):
 @emailCheck
 @passwordCheck
 def emailChange(request):
+    """
+    邮箱修改用户密码
+    """
     email = request.POST.get('email')
     VCode = request.POST.get('emailVCode')
     password = request.POST.get('password')
@@ -177,17 +174,13 @@ def emailChange(request):
 
 @tokenCheck
 def getInfo(request):
-    print(request.payload)
+    """
+    获取用户信息
+    """
     username = request.payload['username']
-    # 有主表的username
-    # 获取从表的记录
-
     user = User.objects.get(username=username)
     userInfo = UserInfo.objects.get(user_id=user.id)
-    now = userInfo.last_login.now()
-    print(int(time.mktime(userInfo.last_login.timetuple())))
-    # print(type(userInfo.last_login))
-    desired_format = '%Y-%m-%dT%H-%M'
+
     result = {
         'code': 10204,
         'msg': '用户信息获取成功',
@@ -196,7 +189,6 @@ def getInfo(request):
                 'username': user.username,
                 'avatar': '',
                 'last_login': int(time.mktime(userInfo.last_login.timetuple()))
-                # 'last_login': userInfo.last_login.time()
             }
         }
     }

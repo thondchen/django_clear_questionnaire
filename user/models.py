@@ -27,6 +27,4 @@ class UserLogin(models.Model):
     login_time = models.DateTimeField(auto_now=True)
     ip = models.GenericIPAddressField()
     os = models.CharField(max_length=200)
-    login_mode = models.CharField(max_length=100,default='')
-
-
+    login_mode = models.CharField(max_length=100, default='')
