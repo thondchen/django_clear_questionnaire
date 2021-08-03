@@ -10,7 +10,7 @@ from django.views.generic import View
 from tools.index import getRandomNumberStr
 from user.decorators.user import *
 # Create your views here.
-from user.models import User
+from user.models import User, UserInfo, UserLogin
 
 
 def index(request):
@@ -29,9 +29,14 @@ def emailActivate(request):
     r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
     if r.exists(email):
         if VCode == r.get(email).decode():
+            # 注册操作
             user = User.objects.create(email=email, password=password, active=True)
             user.username = 'qw_' + str(user.id)
             user.save()
+            UserInfo.objects.create(
+                user=user,
+                nickname=user.username,
+            )
 
         r.delete(email)
         r.delete(email + '_COUNT')
@@ -73,21 +78,51 @@ class AccountLogin(View):
     @method_decorator(accountCheck)
     @method_decorator(passwordCheck)
     def post(self, request):
-        username = request.POST.get('username')
+        account = request.POST.get('username')
         password = request.POST.get('password')
-        if User.objects.filter(Q(username=username) | Q(email=username) | Q(phone_number=username),
-                               password=password).exists():
-            token = generateToken(username)
-            result = {
-                'code': 10202,
-                'data': {
-                    'token': token
-                },
-                'msg': '登录成功'
-            }
-            return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
+
+        userLogin = UserLogin()
+
+        if User.objects.filter(username=account, password=password).exists():
+            userLogin.login_mode = 'username'
+            user = User.objects.get(username=account, password=password)
+            username = user.username
+            userLogin.user = user
+
+        elif User.objects.filter(email=account, password=password).exists():
+            userLogin.login_mode = 'email'
+            user = User.objects.get(email=account, password=password)
+            username = user.username
+            userLogin.user = user
+        elif User.objects.filter(phone_number=account, password=password).exists():
+            userLogin.login_mode = 'phone_number'
+            user = User.objects.get(phone_number=account, password=password)
+            username = user.username
+            userLogin.user = user
         else:
             return codeMsg(10409, '用户名或密码不正确')
+        # if User.objects.filter(Q(username=username) | Q(email=username) | Q(phone_number=username),
+        #                        password=password).exists():
+        # 登录操作
+        userLogin.username = username
+        userLogin.ip = request.META["HTTP_X_FORWARDED_FOR"]
+        userLogin.os = request.META['HTTP_USER_AGENT']
+        userLogin.save()
+
+        userInfo = UserInfo.objects.get(user_id=user.id)
+        userInfo.save()
+
+        token = generateToken(username)
+        result = {
+            'code': 10202,
+            'data': {
+                'token': token
+            },
+            'msg': '登录成功'
+        }
+        return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
+        # else:
+        #     return codeMsg(10409, '用户名或密码不正确')
 
 
 class EmailForgot(View):
@@ -143,7 +178,27 @@ def emailChange(request):
 @tokenCheck
 def getInfo(request):
     print(request.payload)
-    account = request.payload['username']
-    user = User.objects.get(Q(username=account) | Q(email=account) | Q(phone_number=account))
-    print(user.id)
-    return HttpResponse(request.payload)
+    username = request.payload['username']
+    # 有主表的username
+    # 获取从表的记录
+
+    user = User.objects.get(username=username)
+    userInfo = UserInfo.objects.get(user_id=user.id)
+    now = userInfo.last_login.now()
+    print(int(time.mktime(userInfo.last_login.timetuple())))
+    # print(type(userInfo.last_login))
+    desired_format = '%Y-%m-%dT%H-%M'
+    result = {
+        'code': 10204,
+        'msg': '用户信息获取成功',
+        'data': {
+            'user': {
+                'username': user.username,
+                'avatar': '',
+                'last_login': int(time.mktime(userInfo.last_login.timetuple()))
+                # 'last_login': userInfo.last_login.time()
+            }
+        }
+    }
+
+    return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
