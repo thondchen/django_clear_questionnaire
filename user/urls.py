@@ -11,4 +11,6 @@ urlpatterns = [
     path('account/login', views.AccountLogin.as_view()),
 
     path('get/info',views.getInfo),
+
+    path('change/username',views.changeUsername),
 ]

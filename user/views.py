@@ -8,7 +8,6 @@ from django.views.generic import View
 
 from tools.index import getRandomNumberStr
 from user.decorators.user import *
-# Create your views here.
 from user.models import User, UserInfo, UserLogin
 
 
@@ -104,7 +103,7 @@ class AccountLogin(View):
         userInfo = UserInfo.objects.get(user_id=user.id)
         userInfo.save()
 
-        token = generateToken(user.username)
+        token = generateToken(user.id)
         result = {
             'code': 10202,
             'data': {
@@ -177,8 +176,8 @@ def getInfo(request):
     """
     获取用户信息
     """
-    username = request.payload['username']
-    user = User.objects.get(username=username)
+    id = request.payload['id']
+    user = User.objects.get(id=id)
     userInfo = UserInfo.objects.get(user_id=user.id)
 
     result = {
@@ -194,3 +193,18 @@ def getInfo(request):
     }
 
     return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
+
+
+@tokenCheck
+@usernameCheck
+def changeUsername(request):
+    newUsername = request.POST.get('newUsername')
+    # qaz123
+    # 这里不需要查重邮箱和手机号了，装饰器检查过了
+    if User.objects.filter(username=newUsername).exists():
+        return codeMsg(10412, '用户名已被使用')
+
+    user = User.objects.get(username=request.payload['id'])
+    user.username = newUsername
+    user.save()
+    return codeMsg(10205, '用户名修改成功')

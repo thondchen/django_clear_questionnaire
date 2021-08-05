@@ -20,10 +20,13 @@ from django.http import HttpResponse
 10203, '账号密码修改成功'
 
 10204, '用户信息获取成功'
+10411, '用户名格式错误'
+10411 '用户名已被使用'
+10205, '用户名修改成功'
 """
 
 
-def getRandomNumberStr(bit):
+def getRandomNumberStr(bit: int) -> str:
     """
     生成多少位的随机验证码
     """

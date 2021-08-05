@@ -50,12 +50,12 @@ def accountCheck(f):
     return wrap
 
 
-def generateToken(username):
+def generateToken(id):
     """
     生成Token
     """
     dic = {
-        'username': username,
+        'id': id,
         'exp': time.time() + settings.TOKEN_EXPIRE
     }
     token = jwt.encode(dic, settings.TOKEN_SALT, 'HS256')
@@ -78,5 +78,23 @@ def tokenCheck(f):
             print(e)
             return codeMsg(10405, 'Token解析失败')
         return f(request, *args, **kwargs)
+
+    return wrap
+
+
+def usernameCheck(f):
+    """
+    检查用户名格式
+    """
+
+    def wrap(request, *args, **kwargs):
+        newUsername = request.POST.get('newUsername')
+        # 账号任意字符1~20位即可
+        if (not re.match(r'^\w{1,20}$', newUsername)) or \
+                newUsername.find('@') or \
+                newUsername.find('qw_') or \
+                '0' <= newUsername[0] <= '9':
+            return f(request, *args, **kwargs)
+        return codeMsg(10411, '用户名格式错误')
 
     return wrap
