@@ -117,6 +117,8 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+TEST_SERVER_HOST = '127.0.0.1'
+TEST_SERVER_PORT = '5000'
 
 # Token Configurations
 TOKEN_SALT = 'shaobaitao'
@@ -135,7 +137,13 @@ EMAIL_HOST_USER = 'mail@shaobaitao.cn'
 EMAIL_HOST_PASSWORD = 'SBTsbt128431165'
 EMAIL_USE_TLS = False
 DEFAULT_FROM_EMAIL = '<mail@shaobaitao.cn>'
-FRONT_DEPLOY = ' http://localhost:8080/#'
+FRONT_DEPLOY = 'http://localhost:8080/#'
+
+
+# Files Configurations
+
+IMAGES_PATH = 'media'
+IMAGES_URL = 'http://' + TEST_SERVER_HOST + ':' + TEST_SERVER_PORT + '/' + IMAGES_PATH + '/'
 
 # Caches Configurations
 # 用缓存的时候得手动新建一张缓存表

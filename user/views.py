@@ -179,14 +179,15 @@ def getInfo(request):
     id = request.payload['id']
     user = User.objects.get(id=id)
     userInfo = UserInfo.objects.get(user_id=user.id)
-
+    avatarUrl = settings.IMAGES_URL+str(userInfo.avatar)
     result = {
         'code': 10204,
         'msg': '用户信息获取成功',
         'data': {
             'user': {
                 'username': user.username,
-                'avatar': '',
+                # 'avatar': 'https://wx1.sinaimg.cn/mw2000/005tKgYGly1grraol7esvj30hs0hsab8.jpg',
+                'avatar': avatarUrl,
                 'last_login': int(time.mktime(userInfo.last_login.timetuple()))
             }
         }
@@ -203,8 +204,20 @@ def changeUsername(request):
     # 这里不需要查重邮箱和手机号了，装饰器检查过了
     if User.objects.filter(username=newUsername).exists():
         return codeMsg(10412, '用户名已被使用')
-
-    user = User.objects.get(username=request.payload['id'])
+    print(request.payload)
+    user = User.objects.get(id=request.payload['id'])
     user.username = newUsername
     user.save()
     return codeMsg(10205, '用户名修改成功')
+
+
+@tokenCheck
+def uploadAvatar(request):
+    avatar = request.FILES['avatar']
+    if avatar.size > 1024 * 1024:
+        return codeMsg(10412, '图片不能大于1MB')
+
+    userInfo = UserInfo.objects.get(user=request.payload['id'])
+    userInfo.avatar = avatar
+    userInfo.save()
+    return codeMsg(10206, '图片上传成功')

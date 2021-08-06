@@ -13,4 +13,5 @@ urlpatterns = [
     path('get/info',views.getInfo),
 
     path('change/username',views.changeUsername),
+    path('upload/avatar',views.uploadAvatar),
 ]
