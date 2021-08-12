@@ -50,7 +50,7 @@ def accountCheck(f):
     return wrap
 
 
-def generateToken(id):
+def generateToken(id: str) -> str:
     """
     生成Token
     """

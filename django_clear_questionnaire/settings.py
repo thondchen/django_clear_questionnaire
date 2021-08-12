@@ -35,7 +35,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'user'
+    'user',
+    'questionnaire'
 ]
 
 MIDDLEWARE = [
@@ -117,6 +118,7 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
 TEST_SERVER_HOST = '127.0.0.1'
 TEST_SERVER_PORT = '5000'
 
@@ -141,7 +143,6 @@ FRONT_DEPLOY = 'http://localhost:8080/#'
 
 
 # Files Configurations
-
 IMAGES_PATH = 'media'
 IMAGES_URL = 'http://' + TEST_SERVER_HOST + ':' + TEST_SERVER_PORT + '/' + IMAGES_PATH + '/'
 

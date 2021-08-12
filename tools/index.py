@@ -2,30 +2,6 @@ import json
 
 from django.http import HttpResponse
 
-"""
-10401, '邮箱格式验证失败'
-10402, '密码格式验证失败'
-10403, '账号格式错误'
-10404, '未携带Token'
-10405, 'Token解析失败'
-10406, '激活邮箱不存在'
-10407, '此邮箱已注册'
-10408, '一小时内同一个邮箱只能发10次'
-10409, '用户名或密码不正确'
-10410, '此邮箱未注册'
-10411, '用户名格式错误'
-10411, '用户名已被使用'
-10412, '图片不能大于1MB'
-
-10200, '账号注册成功'
-10201, '邮件发送成功'
-10202, '登录成功' data
-10203, '账号密码修改成功'
-10204, '用户信息获取成功'
-10205, '用户名修改成功'
-10206, '图片上传成功'
-"""
-
 
 def getRandomNumberStr(bit: int) -> str:
     """
@@ -39,7 +15,7 @@ def getRandomNumberStr(bit: int) -> str:
     return str
 
 
-def codeMsg(code: int, msg: str):
+def codeMsg(code: int, msg: str) -> HttpResponse:
     """
     返回携带状态码和信息的HttpResponse
     HttpResponse code and message

@@ -3,26 +3,27 @@ from django.db import models
 
 # Create your models here.
 
-class User(models.Model):
-    username = models.CharField(max_length=100)
+class USER(models.Model):
+    username = models.CharField(max_length=60)
     password = models.CharField(max_length=100)
     email = models.EmailField()
-    phone_number = models.CharField(max_length=11)
-    active = models.BooleanField(default=False)
+    phone_number = models.CharField(max_length=60)
+    state = models.IntegerField()
+    status = models.IntegerField()
 
 
-class UserInfo(models.Model):
-    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    nickname = models.CharField(max_length=100)
+class USER_INFO(models.Model):
+    user = models.ForeignKey(USER, on_delete=models.DO_NOTHING)
     registration_time = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
-    birthday = models.DateField(default='1900-01-01')
-    gender = models.CharField(max_length=10)
+    gender = models.IntegerField()
     avatar = models.ImageField(upload_to='avatar')
+    nickname = models.CharField(max_length=100)
+    birthday = models.DateField(default='1900-01-01')
 
 
-class UserLogin(models.Model):
-    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+class USER_LOGIN(models.Model):
+    user = models.ForeignKey(USER, on_delete=models.DO_NOTHING)
     username = models.CharField(max_length=100)
     login_time = models.DateTimeField(auto_now=True)
     ip = models.GenericIPAddressField()

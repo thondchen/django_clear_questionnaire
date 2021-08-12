@@ -8,7 +8,7 @@ from django.views.generic import View
 
 from tools.index import getRandomNumberStr
 from user.decorators.user import *
-from user.models import User, UserInfo, UserLogin
+from user.models import USER, USER_INFO, USER_LOGIN
 
 
 def index(request):
@@ -28,10 +28,10 @@ def emailActivate(request):
     if r.exists(email):
         if VCode == r.get(email).decode():
             # 注册操作
-            user = User.objects.create(email=email, password=password, active=True)
+            user = USER.objects.create(email=email, password=password, active=True)
             user.username = 'qw_' + str(user.id)
             user.save()
-            UserInfo.objects.create(
+            USER_INFO.objects.create(
                 user=user,
                 nickname=user.username,
             )
@@ -48,7 +48,7 @@ class EmailRegister(View):
     @method_decorator(emailCheck)
     def post(self, request):
         email = request.POST.get('email')
-        if User.objects.filter(email=email).exists():
+        if USER.objects.filter(email=email).exists():
             return codeMsg(10407, '此邮箱已注册')
         r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
         # Redis 键值
@@ -81,15 +81,15 @@ class AccountLogin(View):
 
         # 登录需要对两张表进行操作 UserInfo UserLogin
         # 主要更新UserInfo中last_login和增加UserLogin中用户登录记录
-        userLogin = UserLogin()
-        if User.objects.filter(username=account, password=password).exists():
-            user = User.objects.get(username=account, password=password)
+        userLogin = USER_LOGIN()
+        if USER.objects.filter(username=account, password=password).exists():
+            user = USER.objects.get(username=account, password=password)
             userLogin.login_mode = 'username'
-        elif User.objects.filter(email=account, password=password).exists():
-            user = User.objects.get(email=account, password=password)
+        elif USER.objects.filter(email=account, password=password).exists():
+            user = USER.objects.get(email=account, password=password)
             userLogin.login_mode = 'email'
-        elif User.objects.filter(phone_number=account, password=password).exists():
-            user = User.objects.get(phone_number=account, password=password)
+        elif USER.objects.filter(phone_number=account, password=password).exists():
+            user = USER.objects.get(phone_number=account, password=password)
             userLogin.login_mode = 'phone_number'
         else:
             return codeMsg(10409, '用户名或密码不正确')
@@ -100,7 +100,7 @@ class AccountLogin(View):
         userLogin.os = request.META['HTTP_USER_AGENT']
         userLogin.save()
 
-        userInfo = UserInfo.objects.get(user_id=user.id)
+        userInfo = USER_INFO.objects.get(user_id=user.id)
         userInfo.save()
 
         token = generateToken(user.id)
@@ -123,7 +123,7 @@ class EmailForgot(View):
     def post(self, request):
         email = request.POST.get('email')
 
-        if not User.objects.filter(email=email).exists():
+        if not USER.objects.filter(email=email).exists():
             return codeMsg(10410, '此邮箱未注册')
 
         # 注册db用的0  忘记密码db用的1
@@ -161,7 +161,7 @@ def emailChange(request):
     if r.exists(email):
         if VCode == r.get(email).decode():
             # 这里email必找到
-            user = User.objects.get(email=email)
+            user = USER.objects.get(email=email)
             user.password = password
             user.save()
         r.delete(email)
@@ -177,9 +177,9 @@ def getInfo(request):
     获取用户信息
     """
     id = request.payload['id']
-    user = User.objects.get(id=id)
-    userInfo = UserInfo.objects.get(user_id=user.id)
-    avatarUrl = settings.IMAGES_URL+str(userInfo.avatar)
+    user = USER.objects.get(id=id)
+    userInfo = USER_INFO.objects.get(user_id=user.id)
+    avatarUrl = settings.IMAGES_URL + str(userInfo.avatar)
     result = {
         'code': 10204,
         'msg': '用户信息获取成功',
@@ -202,10 +202,10 @@ def changeUsername(request):
     newUsername = request.POST.get('newUsername')
     # qaz123
     # 这里不需要查重邮箱和手机号了，装饰器检查过了
-    if User.objects.filter(username=newUsername).exists():
+    if USER.objects.filter(username=newUsername).exists():
         return codeMsg(10412, '用户名已被使用')
     print(request.payload)
-    user = User.objects.get(id=request.payload['id'])
+    user = USER.objects.get(id=request.payload['id'])
     user.username = newUsername
     user.save()
     return codeMsg(10205, '用户名修改成功')
@@ -217,7 +217,7 @@ def uploadAvatar(request):
     if avatar.size > 1024 * 1024:
         return codeMsg(10412, '图片不能大于1MB')
 
-    userInfo = UserInfo.objects.get(user=request.payload['id'])
+    userInfo = USER.objects.get(user=request.payload['id'])
     userInfo.avatar = avatar
     userInfo.save()
     return codeMsg(10206, '图片上传成功')
