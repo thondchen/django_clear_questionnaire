@@ -16,7 +16,7 @@ class USER_INFO(models.Model):
     user = models.ForeignKey(USER, on_delete=models.DO_NOTHING)
     registration_time = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
-    gender = models.IntegerField()
+    gender = models.IntegerField(null=True)
     avatar = models.ImageField(upload_to='avatar')
     nickname = models.CharField(max_length=100)
     birthday = models.DateField(default='1900-01-01')

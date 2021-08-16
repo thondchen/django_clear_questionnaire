@@ -28,11 +28,11 @@ def emailActivate(request):
     if r.exists(email):
         if VCode == r.get(email).decode():
             # 注册操作
-            user = USER.objects.create(email=email, password=password, active=True)
+            user = USER.objects.create(email=email, password=password, state=1, status=0)
             user.username = 'qw_' + str(user.id)
             user.save()
             USER_INFO.objects.create(
-                user=user,
+                USER=USER,
                 nickname=user.username,
             )
 
@@ -100,7 +100,7 @@ class AccountLogin(View):
         userLogin.os = request.META['HTTP_USER_AGENT']
         userLogin.save()
 
-        userInfo = USER_INFO.objects.get(user_id=user.id)
+        userInfo = USER_INFO.objects.get(USER_id=user.id)
         userInfo.save()
 
         token = generateToken(user.id)
@@ -217,7 +217,7 @@ def uploadAvatar(request):
     if avatar.size > 1024 * 1024:
         return codeMsg(10412, '图片不能大于1MB')
 
-    userInfo = USER.objects.get(user=request.payload['id'])
+    userInfo = USER_INFO.objects.get(user_id=request.payload['id'])
     userInfo.avatar = avatar
     userInfo.save()
     return codeMsg(10206, '图片上传成功')

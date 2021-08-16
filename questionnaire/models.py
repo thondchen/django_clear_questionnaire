@@ -5,18 +5,18 @@ from user.models import USER
 # Create your models here.
 class PROJECT(models.Model):
     user = models.ForeignKey(USER, on_delete=models.DO_NOTHING)
-    title = models.CharField(max_length=300)
-    desc = models.CharField(max_length=900)
-    state = models.IntegerField()
+    title = models.CharField(max_length=300, blank=False)
+    desc = models.CharField(max_length=900, blank=False, default="感谢参与调查！")
+    state = models.IntegerField(default=0)  # 0未发布 1发布中 2已删除
     created_time = models.DateTimeField(auto_now_add=True)
-    end_time = models.DateTimeField(default=None)
+    end_time = models.DateTimeField(blank=True, null=True)
 
 
 class QUESTION(models.Model):
     project = models.ForeignKey(PROJECT, on_delete=models.DO_NOTHING)
     title = models.CharField(max_length=300)
-    required = models.BooleanField()
-    type = models.IntegerField()
+    required = models.BooleanField(blank=False, default=False)
+    type = models.IntegerField(blank=False)
     desc = models.CharField(max_length=900)
 
 
@@ -31,28 +31,28 @@ class SUBMIT(models.Model):
 class ANSWER(models.Model):
     submit = models.ForeignKey(SUBMIT, on_delete=models.DO_NOTHING)
     question = models.ForeignKey(QUESTION, on_delete=models.DO_NOTHING)
-    type = models.IntegerField()
+    type = models.IntegerField(blank=False)
 
 
 class Q_NOTE(models.Model):
     question = models.ForeignKey(QUESTION, on_delete=models.DO_NOTHING)
-    title = models.TextField()
+    title = models.TextField(blank=False)
 
 
 class Q_COMPLETION(models.Model):
     question = models.ForeignKey(QUESTION, on_delete=models.DO_NOTHING)
-    row = models.IntegerField()
+    row = models.IntegerField(blank=False, default=1)
     regex = models.CharField(max_length=200)
 
 
 class Q_CHOICE(models.Model):
     question = models.ForeignKey(QUESTION, on_delete=models.DO_NOTHING)
-    title = models.CharField(max_length=300)
+    title = models.CharField(max_length=300, blank=False)
 
 
 class Q_TABLE(models.Model):
     question = models.ForeignKey(QUESTION, on_delete=models.DO_NOTHING)
-    field = models.CharField(max_length=300)
+    field = models.CharField(max_length=300, blank=False)
     field_type = models.IntegerField()
     serial_number = models.IntegerField()
     cell_type = models.IntegerField()
@@ -60,7 +60,7 @@ class Q_TABLE(models.Model):
 
 class Q_TABLE_OPTIONS(models.Model):
     field = models.ForeignKey(Q_TABLE, on_delete=models.DO_NOTHING)
-    title = models.CharField(max_length=300)
+    title = models.CharField(max_length=300, blank=False)
 
 
 class Q_IMAGE(models.Model):
@@ -79,7 +79,7 @@ class A_TABLE(models.Model):
     row_field = models.ForeignKey(Q_TABLE, related_name='row', on_delete=models.DO_NOTHING)
     column_field = models.ForeignKey(Q_TABLE, related_name='column', on_delete=models.DO_NOTHING)
     serial_number = models.IntegerField()
-    content = models.TextField()
+    content = models.TextField(blank=False)
 
 
 class A_CHOICE(models.Model):
@@ -89,4 +89,4 @@ class A_CHOICE(models.Model):
 
 class A_COMPLETION(models.Model):
     answer = models.ForeignKey(ANSWER, on_delete=models.DO_NOTHING)
-    content = models.TextField()
+    content = models.TextField(blank=False)
