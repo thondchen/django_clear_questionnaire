@@ -32,7 +32,7 @@ def emailActivate(request):
             user.username = 'qw_' + str(user.id)
             user.save()
             USER_INFO.objects.create(
-                USER=USER,
+                user=user,
                 nickname=user.username,
             )
 
@@ -100,7 +100,7 @@ class AccountLogin(View):
         userLogin.os = request.META['HTTP_USER_AGENT']
         userLogin.save()
 
-        userInfo = USER_INFO.objects.get(USER_id=user.id)
+        userInfo = USER_INFO.objects.get(user_id=user.id)
         userInfo.save()
 
         token = generateToken(user.id)
@@ -178,7 +178,8 @@ def getInfo(request):
     """
     id = request.payload['id']
     user = USER.objects.get(id=id)
-    userInfo = USER_INFO.objects.get(user_id=user.id)
+    print(user.id)
+    userInfo = USER_INFO.objects.get(user=user.id)
     avatarUrl = settings.IMAGES_URL + str(userInfo.avatar)
     result = {
         'code': 10204,

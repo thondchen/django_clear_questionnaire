@@ -64,7 +64,7 @@ def generateToken(id: str) -> str:
 
 def tokenCheck(f):
     """
-    解析Token的装饰器
+    解析Token
     """
 
     def wrap(request, *args, **kwargs):
