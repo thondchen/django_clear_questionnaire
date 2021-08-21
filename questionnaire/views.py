@@ -1,6 +1,8 @@
 # Create your views here.
 import time
 
+from django.db.models import Q
+
 from questionnaire.decorators.index import createCheck
 from questionnaire.models import PROJECT
 from tools.index import *
@@ -32,7 +34,7 @@ def getProjects(request):
     id = request.payload['id']
     count = int(request.POST['count'])
     multiple = 10
-    projects = PROJECT.objects.filter(user=id)[multiple * (count - 1):multiple * count]
+    projects = PROJECT.objects.filter(Q(user=id) and ~Q(state=2))[multiple * (count - 1):multiple * count]
     jsonList = querySetToList(projects)
     for inx, dic in enumerate(jsonList):
         dic['created_time'] = int(time.mktime(projects[inx].created_time.timetuple()))
@@ -43,5 +45,16 @@ def getProjects(request):
 @tokenCheck
 def getProjectsCount(request):
     id = request.payload['id']
-    count = PROJECT.objects.filter(user=id).count()
+    count = PROJECT.objects.filter(Q(user=id) and ~Q(state=2)).count()
     return codeMsg(20202, "项目数量获取成功", count)
+
+
+@tokenCheck
+def deleteProject(request):
+    id = int(request.POST['id'])
+
+    project = PROJECT.objects.get(id=id)
+    project.state = 2
+    # 2 是已删除
+    project.save()
+    return codeMsg(20202, "删除项目成功")

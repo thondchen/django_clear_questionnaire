@@ -24,7 +24,7 @@ SECRET_KEY = '3%5y3#($uruk$u3p7jl=pm$c)8v&jw_srrh5sr@a9=)ff&585)'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -119,7 +119,8 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 
-TEST_SERVER_HOST = '127.0.0.1'
+# TEST_SERVER_HOST = '127.0.0.1'
+TEST_SERVER_HOST = '192.168.2.103'
 TEST_SERVER_PORT = '5000'
 
 # Token Configurations
@@ -127,7 +128,7 @@ TOKEN_SALT = 'shaobaitao'
 TOKEN_EXPIRE = 24*60*60
 
 # Redis Configurations
-REDIS_HOST = '127.0.0.1'
+REDIS_HOST = '192.168.2.103'
 REDIS_PORT = '6379'
 REDIS_EXPIRE = 30
 

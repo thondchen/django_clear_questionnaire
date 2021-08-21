@@ -15,10 +15,12 @@ def index(request):
     return HttpResponse("ok")
 
 
-# 邮箱验证码激活注册账号 过两个检查装饰器
 @emailCheck
 @passwordCheck
 def emailActivate(request):
+    """
+    邮箱验证码激活注册账号 过两个检查装饰器
+    """
     email = request.POST.get('email')
     VCode = request.POST.get('emailVCode')
     password = request.POST.get('password')
@@ -43,8 +45,9 @@ def emailActivate(request):
         return codeMsg(10406, '激活邮箱不存在')
 
 
-# 邮箱注册视图类
 class EmailRegister(View):
+    """邮箱注册视图类"""
+
     @method_decorator(emailCheck)
     def post(self, request):
         email = request.POST.get('email')
