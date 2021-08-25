@@ -59,6 +59,7 @@ def generateToken(id: str) -> str:
         'exp': time.time() + settings.TOKEN_EXPIRE
     }
     token = jwt.encode(dic, settings.TOKEN_SALT, 'HS256')
+    print(token)
     return token
 
 
