@@ -10,8 +10,8 @@ urlpatterns = [
     path('email/change', views.emailChange),
     path('account/login', views.AccountLogin.as_view()),
 
-    path('get/info',views.getInfo),
+    path('get/info', views.getInfo),
 
-    path('change/username',views.changeUsername),
-    path('upload/avatar',views.uploadAvatar),
+    path('change/username', views.changeUsername),
+    path('upload/avatar', views.uploadAvatar),
 ]

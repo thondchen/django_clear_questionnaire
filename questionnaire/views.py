@@ -35,7 +35,7 @@ def getProjects(request):
     count = int(request.POST['count'])
     multiple = 10
     print(id)
-    projects = PROJECT.objects.filter(Q(user=id) & ~Q(state=2))[multiple * (count - 1):multiple * count]
+    projects = PROJECT.objects.filter(Q(user=id) & ~Q(state=2)).order_by('-id')[multiple * (count - 1):multiple * count]
     jsonList = querySetToList(projects)
     for inx, dic in enumerate(jsonList):
         dic['created_time'] = int(time.mktime(projects[inx].created_time.timetuple()))
@@ -46,7 +46,6 @@ def getProjects(request):
 @tokenCheck
 def getProjectsCount(request):
     id = request.payload['id']
-    print(id)
     count = PROJECT.objects.filter(Q(user=id) & ~Q(state=2)).count()
     return codeMsg(20202, "项目数量获取成功", count)
 
@@ -59,4 +58,13 @@ def deleteProject(request):
     project.state = 2
     # 2 是已删除
     project.save()
+    return codeMsg(20202, "删除项目成功")
+
+
+@tokenCheck
+def createSingleChoice(request):
+    print(request.body)
+    # question = request.body.decode()
+    # print(type(question))
+
     return codeMsg(20202, "删除项目成功")
