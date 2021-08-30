@@ -1,3 +1,4 @@
+import json
 import re
 import time
 import jwt
@@ -41,6 +42,9 @@ def accountCheck(f):
     """
 
     def wrap(request, *args, **kwargs):
+        print(request.body, type(request.body))
+        print(request.POST, type(request.POST))
+        request.POST = json.loads(request.body)
         username = request.POST.get('username')
         # 账号任意字符1~20位即可
         if re.match(r'^[\s\S]{1,20}$', username):

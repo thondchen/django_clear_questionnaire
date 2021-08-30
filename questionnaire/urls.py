@@ -12,6 +12,8 @@ urlpatterns = [
     path('getProjectsCount', views.getProjectsCount),
 
     path('createSingleChoice', views.createSingleChoice),
+    path('createMultipleChoice', views.createMultipleChoice),
+    path('createCompletion', views.createCompletion),
 
 
 ]

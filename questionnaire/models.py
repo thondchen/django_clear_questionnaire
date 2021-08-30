@@ -18,6 +18,7 @@ class QUESTION(models.Model):
     required = models.BooleanField(blank=False, default=False)
     type = models.IntegerField(blank=False)
     desc = models.CharField(max_length=900)
+    random = models.BooleanField(blank=False, default=False)
 
 
 class SUBMIT(models.Model):
@@ -41,7 +42,6 @@ class Q_NOTE(models.Model):
 
 class Q_COMPLETION(models.Model):
     question = models.ForeignKey(QUESTION, on_delete=models.DO_NOTHING)
-    row = models.IntegerField(blank=False, default=1)
     regex = models.CharField(max_length=200)
 
 

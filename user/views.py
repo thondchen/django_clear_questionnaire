@@ -79,6 +79,8 @@ class AccountLogin(View):
     @method_decorator(accountCheck)
     @method_decorator(passwordCheck)
     def post(self, request):
+        print(type(request.body))
+        request.POST=json.loads(request.body)
         account = request.POST.get('username')
         password = request.POST.get('password')
 
