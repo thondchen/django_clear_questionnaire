@@ -8,13 +8,26 @@ from django.conf import settings
 from tools.index import codeMsg
 
 
+def jsonLoad(f):
+    """
+    request.POST = json.loads(request.body)
+    """
+
+    def wrap(request, *args, **kwargs):
+        request.POST = json.loads(request.body)
+        return f(request, *args, **kwargs)
+
+    return wrap
+
+
 def emailCheck(f):
     """
     检查邮箱格式
     """
 
     def wrap(request, *args, **kwargs):
-        email = request.POST.get('email')
+        request.POST = json.loads(request.body)
+        email = request.POST['email']
         if re.match(r'^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$', email) is not None:
             return f(request, *args, **kwargs)
         return codeMsg(10401, '邮箱格式验证失败')
@@ -28,7 +41,8 @@ def passwordCheck(f):
     """
 
     def wrap(request, *args, **kwargs):
-        password = request.POST.get('password')
+        request.POST = json.loads(request.body)
+        password = request.POST['password']
         if re.match(r'^\w{64}$', password) is not None:
             return f(request, *args, **kwargs)
         return codeMsg(10402, '密码格式验证失败')
@@ -42,8 +56,6 @@ def accountCheck(f):
     """
 
     def wrap(request, *args, **kwargs):
-        print(request.body, type(request.body))
-        print(request.POST, type(request.POST))
         request.POST = json.loads(request.body)
         username = request.POST.get('username')
         # 账号任意字符1~20位即可
@@ -93,6 +105,7 @@ def usernameCheck(f):
     """
 
     def wrap(request, *args, **kwargs):
+        request.POST = json.loads(request.body)
         newUsername = request.POST.get('newUsername')
         # 账号任意字符1~20位即可
         if (not re.match(r'^\w{1,20}$', newUsername)) or \

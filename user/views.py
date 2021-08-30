@@ -15,6 +15,7 @@ def index(request):
     return HttpResponse("ok")
 
 
+@jsonLoad
 @emailCheck
 @passwordCheck
 def emailActivate(request):
@@ -48,6 +49,7 @@ def emailActivate(request):
 class EmailRegister(View):
     """邮箱注册视图类"""
 
+    @method_decorator(jsonLoad)
     @method_decorator(emailCheck)
     def post(self, request):
         email = request.POST.get('email')
@@ -76,11 +78,10 @@ class EmailRegister(View):
 
 
 class AccountLogin(View):
+    @method_decorator(jsonLoad)
     @method_decorator(accountCheck)
     @method_decorator(passwordCheck)
     def post(self, request):
-        print(type(request.body))
-        request.POST=json.loads(request.body)
         account = request.POST.get('username')
         password = request.POST.get('password')
 
@@ -124,6 +125,7 @@ class EmailForgot(View):
     邮箱找回密码
     """
 
+    @method_decorator(jsonLoad)
     @method_decorator(emailCheck)
     def post(self, request):
         email = request.POST.get('email')
@@ -151,6 +153,7 @@ class EmailForgot(View):
         return codeMsg(10201, '邮件发送成功')
 
 
+@jsonLoad
 @emailCheck
 @passwordCheck
 def emailChange(request):
@@ -202,11 +205,11 @@ def getInfo(request):
     return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
 
 
+@jsonLoad
 @tokenCheck
 @usernameCheck
 def changeUsername(request):
     newUsername = request.POST.get('newUsername')
-    # qaz123
     # 这里不需要查重邮箱和手机号了，装饰器检查过了
     if USER.objects.filter(username=newUsername).exists():
         return codeMsg(10412, '用户名已被使用')
