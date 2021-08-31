@@ -7,6 +7,7 @@ from questionnaire.decorators.index import *
 from questionnaire.models import PROJECT, QUESTION, Q_CHOICE, Q_COMPLETION
 from tools.index import *
 from user.decorators.user import tokenCheck
+from user.models import USER_INFO
 
 
 def index(request):
@@ -21,13 +22,16 @@ def create(request):
     title = request.POST['title']
     desc = request.POST['desc']
 
-    PROJECT.objects.create(
+    project = PROJECT.objects.create(
         title=title,
         desc=desc,
         state=0,
         user_id=userID
     )
-    return codeMsg(20200, "问卷创建成功")
+    data = {
+        'projectID': project.id
+    }
+    return codeMsg(20200, "问卷创建成功", data)
 
 
 @jsonLoad
@@ -125,3 +129,37 @@ def createCompletion(request):
         regex=request.POST['question']['regex']
     )
     return codeMsg(20206, "填空题创建成功")
+
+
+@jsonLoad
+@tokenCheck
+@questionPermissionCheck
+def getQuestions(request):
+    data = {}
+    projectID = request.POST['projectID']
+    # projectID = 50
+
+    project = PROJECT.objects.get(id=projectID)
+    data['id'] = project.id
+    data['creator'] = project.user.username
+    data['avatar'] = str(USER_INFO.objects.get(user=project.user).avatar)
+    data['title'] = project.title
+    data['desc'] = project.desc
+
+    questions = QUESTION.objects.filter(project=project.id)
+
+    data['questions'] = querySetToList(questions)
+
+    for item in data['questions']:
+        # print(data['questions'][item].type)
+        print(item.get('type'), type(item))
+
+        if item.get('type') == 1 or item.get('type') == 2:
+            options = Q_CHOICE.objects.filter(question_id=item.get('id'))
+            options = querySetToList(options)
+            item['options'] = options
+        elif item.get('type') == 3:
+            regex = Q_COMPLETION.objects.get(question_id=item.get('id'))
+            item['regex'] = regex.regex
+
+    return codeMsg(20207, "项目问题获取成功", data)
