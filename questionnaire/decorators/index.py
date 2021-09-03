@@ -1,6 +1,8 @@
 import json
 
-from questionnaire.models import PROJECT
+from django.db.models import F, Max
+
+from questionnaire.models import PROJECT, QUESTION
 from tools.index import codeMsg
 import re
 
@@ -33,10 +35,29 @@ def questionPermissionCheck(f):
     def wrap(request, *args, **kwargs):
         id = request.payload['id']
         obj = json.loads(request.body)
+
         if id == PROJECT.objects.get(id=obj['projectID']).user_id:
             return f(request, *args, **kwargs)
         else:
             return codeMsg(20402, "没有题目权限")
+
+    return wrap
+
+
+def questionSerialNumber(f):
+    """
+    返回问题的序号
+    """
+
+    def wrap(request, *args, **kwargs):
+        questions = QUESTION.objects.filter(project=request.POST['projectID']).aggregate(Max('serial_number'))
+        print(questions)
+        if questions['serial_number__max'] is None:
+            serialNumber = 1
+        else:
+            serialNumber = questions['serial_number__max'] + 1
+        request.serialNumber = serialNumber
+        return f(request, *args, **kwargs)
 
     return wrap
 

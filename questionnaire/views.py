@@ -73,6 +73,7 @@ def deleteProject(request):
 @tokenCheck
 @questionPermissionCheck
 @radioCheck
+@questionSerialNumber
 def createSingleChoice(request):
     question = QUESTION.objects.create(
         title=request.POST['question']['title'],
@@ -81,6 +82,7 @@ def createSingleChoice(request):
         desc=request.POST['question']['desc'],
         random=request.POST['question']['random'],
         project_id=request.POST['projectID'],
+        serial_number=request.serialNumber
     )
     for option in request.POST['question']['options']:
         Q_CHOICE.objects.create(
@@ -94,6 +96,7 @@ def createSingleChoice(request):
 @tokenCheck
 @questionPermissionCheck
 @radioCheck
+@questionSerialNumber
 def createMultipleChoice(request):
     question = QUESTION.objects.create(
         title=request.POST['question']['title'],
@@ -102,6 +105,7 @@ def createMultipleChoice(request):
         desc=request.POST['question']['desc'],
         random=request.POST['question']['random'],
         project_id=request.POST['projectID'],
+        serial_number=request.serialNumber
     )
     for option in request.POST['question']['options']:
         Q_CHOICE.objects.create(
@@ -115,6 +119,7 @@ def createMultipleChoice(request):
 @tokenCheck
 @questionPermissionCheck
 @completionCheck
+@questionSerialNumber
 def createCompletion(request):
     question = QUESTION.objects.create(
         title=request.POST['question']['title'],
@@ -122,6 +127,7 @@ def createCompletion(request):
         type=3,
         desc=request.POST['question']['desc'],
         project_id=request.POST['projectID'],
+        serial_number=request.serialNumber
     )
 
     Q_COMPLETION.objects.create(
@@ -146,13 +152,13 @@ def getQuestions(request):
     data['title'] = project.title
     data['desc'] = project.desc
 
-    questions = QUESTION.objects.filter(project=project.id)
+    questions = QUESTION.objects.filter(state=1).filter(project=project.id).order_by('serial_number')
 
     data['questions'] = querySetToList(questions)
 
     for item in data['questions']:
         # print(data['questions'][item].type)
-        print(item.get('type'), type(item))
+        # print(item.get('type'), type(item))
 
         if item.get('type') == 1 or item.get('type') == 2:
             options = Q_CHOICE.objects.filter(question_id=item.get('id'))
@@ -163,3 +169,48 @@ def getQuestions(request):
             item['regex'] = regex.regex
 
     return codeMsg(20207, "项目问题获取成功", data)
+
+
+@jsonLoad
+@tokenCheck
+@questionPermissionCheck
+def deleteQuestion(request):
+    print(request.POST['questionID'])
+    question = QUESTION.objects.get(id=request.POST['questionID'])
+    question.state = 0
+
+    # questions = QUESTION.objects.filter(serial_number__gt=question.serial_number)
+    QUESTION.objects.filter(serial_number__gt=question.serial_number).update(serial_number=F('serial_number') - 1)
+    question.serial_number = 0
+    question.save()
+    return codeMsg(20208, "项目问题删除成功")
+
+
+@jsonLoad
+@tokenCheck
+@questionPermissionCheck
+def moveQuestion(request):
+    direction = request.POST['direction']
+    projectID = request.POST['projectID']
+    questionID = request.POST['questionID']
+
+    question = QUESTION.objects.get(id=questionID)
+    if direction == 0:  # up
+        if question.serial_number == 1:
+            return codeMsg(20209, "该项目问题不能上移")
+        question.serial_number -= 1
+
+        QUESTION.objects.filter(project=projectID).filter(serial_number=question.serial_number).update(
+            serial_number=F('serial_number') + 1)
+        question.save()
+
+    else:  # down
+        max = QUESTION.objects.filter(project=projectID).aggregate(Max('serial_number'))['serial_number__max']
+        if question.serial_number == max:
+            return codeMsg(20209, "该项目问题不能下移")
+        question.serial_number += 1
+
+        QUESTION.objects.filter(project=projectID).filter(serial_number=question.serial_number).update(
+            serial_number=F('serial_number') - 1)
+        question.save()
+    return codeMsg(20209, "项目问题移动成功")

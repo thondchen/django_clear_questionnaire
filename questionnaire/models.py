@@ -19,7 +19,8 @@ class QUESTION(models.Model):
     type = models.IntegerField(blank=False)
     desc = models.CharField(max_length=900)
     random = models.BooleanField(blank=False, default=False)
-
+    serial_number = models.IntegerField(default=0)
+    state = models.IntegerField(default=1)  # 0删除 1正常
 
 class SUBMIT(models.Model):
     project = models.ForeignKey(PROJECT, on_delete=models.DO_NOTHING)
