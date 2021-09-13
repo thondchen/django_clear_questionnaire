@@ -214,3 +214,69 @@ def moveQuestion(request):
             serial_number=F('serial_number') - 1)
         question.save()
     return codeMsg(20209, "项目问题移动成功")
+
+
+@jsonLoad
+@tokenCheck
+# @questionPermissionCheck
+def getQuestion(request):
+    questionID = request.POST['questionID']
+    question = QUESTION.objects.filter(id=questionID)
+    data = querySetToList(question)
+
+    for item in data:
+        # print(data['questions'][item].type)
+        # print(item.get('type'), type(item))
+
+        if item.get('type') == 1 or item.get('type') == 2:
+            options = Q_CHOICE.objects.filter(question_id=item.get('id'))
+            options = querySetToList(options)
+            item['options'] = options
+        elif item.get('type') == 3:
+            regex = Q_COMPLETION.objects.get(question_id=item.get('id'))
+            item['regex'] = regex.regex
+
+    return codeMsg(20210, "项目单个问题获取成功", data)
+
+
+@jsonLoad
+@tokenCheck
+@questionPermissionCheck
+@radioCheck
+@questionSerialNumber
+def editSingleChoice(request):
+    print(request.POST)
+    questionID = request.POST['question']['id']
+    QUESTION.objects.filter(id=questionID).update(
+        title=request.POST['question']['title'],
+        required=request.POST['question']['required'],
+        desc=request.POST['question']['desc'],
+        random=request.POST['question']['random'],
+    )
+
+    # 这边选项修改比较麻烦
+    for option in request.POST['question']['options']:
+        print(option)
+        Q_CHOICE.objects.filter(id=option['id']).update(
+            title=option['title']
+        )
+
+    return codeMsg(20204, "单选题编辑成功")
+
+
+@jsonLoad
+@tokenCheck
+@questionPermissionCheck
+@radioCheck
+@questionSerialNumber
+def editMultipleChoice(request):
+    return None
+
+
+@jsonLoad
+@tokenCheck
+@questionPermissionCheck
+@completionCheck
+@questionSerialNumber
+def editCompletion(request):
+    return None

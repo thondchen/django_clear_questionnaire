@@ -7,11 +7,12 @@ urlpatterns = [
     path('create', views.create),
     path('deleteProject', views.deleteProject),
 
-
     path('getProjects', views.getProjects),
     path('getProjectsCount', views.getProjectsCount),
 
+    path('getQuestion', views.getQuestion),
     path('getQuestions', views.getQuestions),
+
     path('deleteQuestion', views.deleteQuestion),
     path('moveQuestion', views.moveQuestion),
 
@@ -19,5 +20,8 @@ urlpatterns = [
     path('createMultipleChoice', views.createMultipleChoice),
     path('createCompletion', views.createCompletion),
 
+    path('editSingleChoice', views.editSingleChoice),
+    path('editMultipleChoice', views.editMultipleChoice),
+    path('editCompletion', views.editCompletion),
 
 ]
